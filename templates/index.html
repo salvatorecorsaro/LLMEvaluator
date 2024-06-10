@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LLM Evaluator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<header>
+    <img src="{{ url_for('static', filename='images/llmlogo_back.png') }}" alt="LLM Evaluator Logo" class="logo">
+</header>
+
+<form id="evaluation-form">
+    <label for="model">Select the model to test:</label>
+    <select id="model" name="model">
+        <option value="gpt_3.5">GPT-3.5</option>
+        <option value="gpt_4">GPT-4</option>
+        <option value="gpt_4o">GPT-4o</option>
+        <option value="llama_3_8b">Llama 3 8b</option>
+        <option value="llama_3_70b">Llama 3 70b</option>
+        <option value="claude_3_sonnet">Claude 3 Sonnet</option>
+        <option value="claude_3_haiku">Claude 3 Haiku</option>
+        <option value="claude_3_opus">Claude 3 Opus</option>
+        <option value="claude_v2.1_200k">Claude v2.1 200K</option>
+        <option value="amazon_titan_text_g1">Amazon Titan Text G1</option>
+    </select>
+
+    <label for="temperature">Temperature:</label>
+    <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="1" value="0.5">
+
+    <label for="prompt">The prompt to use:</label>
+    <textarea id="prompt" name="prompt" rows="4"></textarea>
+
+    <label for="criteria">The score rules:</label>
+    <textarea id="criteria" name="criteria" rows="6"></textarea>
+
+    <label for="expected_result">A good expected result (optional):</label>
+    <textarea id="expected_result" name="expected_result" rows="6"></textarea>
+
+    <label for="iterations">Number of iterations (from 1 to 10):</label>
+    <input type="number" id="iterations" name="iterations" min="1" max="10" value="1">
+
+    <button type="submit">Submit</button>
+</form>
+<div id="results">
+    <h2>Evaluation Results</h2>
+    <div id="result-table"></div>
+</div>
+<button id="export-csv">Export as CSV</button>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
