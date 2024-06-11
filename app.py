@@ -48,12 +48,20 @@ def index():
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate():
-    model = request.form['model']
-    temperature = float(request.form['temperature'])
-    prompt = request.form['prompt']
-    criteria = request.form['criteria']
-    iterations = int(request.form['iterations'])
-    expected_result = request.form['expected_result']
+    required_fields = ['model', 'temperature', 'prompt', 'criteria', 'iterations', 'expected_result']
+    for field in required_fields:
+        if field not in request.form:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+
+    try:
+        model = request.form['model']
+        temperature = float(request.form['temperature'])
+        prompt = request.form['prompt']
+        criteria = request.form['criteria']
+        iterations = int(request.form['iterations'])
+        expected_result = request.form['expected_result']
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
 
     accuracy_criteria = {
         "accuracy": criteria
