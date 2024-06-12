@@ -12,6 +12,8 @@ import dotenv
 import re
 import logging
 import os
+import csv
+import io
 
 dotenv.load_dotenv()
 app = Flask(__name__)
@@ -158,6 +160,107 @@ def evaluate():
         'final_verdict': final_verdict,
         'temperature': temperature
     })
+
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file and file.filename.endswith('.csv'):
+        experiments = []
+        try:
+            csvfile = file.stream.read().decode('utf-8').splitlines()
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                experiments.append(row)
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+        results = []
+        for exp in experiments:
+            try:
+                model = exp['model']
+                temperature = float(exp['temperature'])
+                max_new_tokens = int(exp['max_new_tokens'])
+                prompt = exp['prompt']
+                criteria = exp['criteria']
+                iterations = int(exp['iterations'])
+                expected_result = exp['expected_result']
+
+                accuracy_criteria = {
+                    "accuracy": criteria
+                }
+
+                evaluator = load_evaluator(
+                    "labeled_score_string",
+                    criteria=accuracy_criteria,
+                )
+
+                llm = get_llm(model, temperature, max_new_tokens)
+                eval_results = []
+
+                for i in range(iterations):
+                    if isinstance(llm, (ChatOpenAI, BedrockChat, WatsonxLLM)):
+                        messages = [HumanMessage(content=prompt)]
+                        logging.debug(f"Sending messages to model: {messages}")
+                        response = llm(messages)
+                        prediction = response[0].content if isinstance(response, list) else response.content
+                    elif isinstance(llm, BedrockLLM):
+                        logging.debug(f"Sending prompt to model: {prompt}")
+                        prediction = llm(prompt)
+                    else:
+                        logging.debug(f"Sending prompt to model: {prompt}")
+                        prediction = llm(prompt)
+
+                    logging.debug(f"Received prediction: {prediction}")
+
+                    eval_result = evaluator.evaluate_strings(prediction=prediction, input=prompt, reference=expected_result)
+                    score_match = re.search(r'\[\[(\d+)]]', eval_result['reasoning'])
+                    score = int(score_match.group(1)) if score_match else None
+                    eval_results.append({
+                        'iteration': i + 1,
+                        'prediction': prediction,
+                        'score': score,
+                        'reason': eval_result['reasoning']
+                    })
+
+                scores = [result["score"] for result in eval_results if result["score"] is not None]
+                avg_score = sum(scores) / len(scores) if scores else None
+
+                final_verdict_prompt = f"Final verdict for the evaluation of {model} based on the given criteria and {iterations} iterations:"
+                if isinstance(llm, (ChatOpenAI, BedrockChat, WatsonxLLM)):
+                    final_verdict_messages = [HumanMessage(content=final_verdict_prompt)]
+                    logging.debug(f"Sending final verdict prompt to model: {final_verdict_messages}")
+                    final_verdict_response = llm(final_verdict_messages)
+                    final_verdict = final_verdict_response.content if not isinstance(final_verdict_response, list) else \
+                        final_verdict_response[0].content
+                elif isinstance(llm, BedrockLLM):
+                    logging.debug(f"Sending final verdict prompt to model: {final_verdict_prompt}")
+                    final_verdict = llm(final_verdict_prompt)
+                else:
+                    logging.debug(f"Sending final verdict prompt to model: {final_verdict_prompt}")
+                    final_verdict = llm(final_verdict_prompt)
+
+                results.append({
+                    'model': model,
+                    'eval_results': eval_results,
+                    'avg_score': avg_score,
+                    'final_verdict': final_verdict,
+                    'temperature': temperature
+                })
+            except ValueError as e:
+                results.append({
+                    'model': exp['model'],
+                    'error': str(e)
+                })
+
+        return jsonify(results)
+    else:
+        return jsonify({'error': 'Invalid file format. Please upload a CSV file.'}), 400
 
 
 if __name__ == '__main__':

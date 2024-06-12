@@ -55,6 +55,13 @@
     <div id="result-table"></div>
 </div>
 <button id="export-csv">Export as CSV</button>
+
+<h2>Upload CSV to Run Experiments</h2>
+<form id="csv-upload-form" method="post" enctype="multipart/form-data" action="/upload_csv">
+    <input type="file" name="file" accept=".csv">
+    <button type="submit">Upload and Run Experiments</button>
+</form>
+
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
