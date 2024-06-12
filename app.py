@@ -5,40 +5,61 @@ from langchain_openai import ChatOpenAI, OpenAI
 from langchain_aws import BedrockLLM
 from langchain_community.chat_models import BedrockChat
 
+from langchain_ibm import WatsonxLLM
+
 from langchain.schema import HumanMessage
 import dotenv
 import re
 import logging
+import os
 
 dotenv.load_dotenv()
 app = Flask(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
 
+def get_llm(model_name, temperature, max_new_tokens):
+    parameters = {
+        "decoding_method": "sample",
+        "max_new_tokens": max_new_tokens,
+        "min_new_tokens": 1,
+        "temperature": temperature,
+        "top_k": 50,
+        "top_p": 1,
+    }
 
-def get_llm(model_name, temperature):
     if model_name == 'gpt_3.5':
-        return ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=temperature, max_tokens=1024)
+        return ChatOpenAI(model_name="gpt-3.5-turbo-0125", temperature=temperature, max_tokens=max_new_tokens)
     elif model_name == 'gpt_4':
-        return ChatOpenAI(model_name="gpt-4-turbo", temperature=temperature, max_tokens=1024)
+        return ChatOpenAI(model_name="gpt-4-turbo", temperature=temperature, max_tokens=max_new_tokens)
     elif model_name == 'gpt_4o':
-        return ChatOpenAI(model_name="gpt-4o", temperature=temperature, max_tokens=1024)
-    elif model_name == 'llama_3_8b':
+        return ChatOpenAI(model_name="gpt-4o", temperature=temperature, max_tokens=max_new_tokens)
+    elif model_name == 'llama_2_13b':
         return BedrockLLM(model_id="meta.llama2-13b-chat-v1")
+    elif model_name == 'llama_3_8b':
+        return BedrockLLM(model_id="meta.llama3-8b-instruct-v1:0")
     elif model_name == 'llama_3_70b':
-        return BedrockChat(model_id="meta.llama3-70b-instruct-v1")
+        return BedrockChat(model_id="meta.llama3-70b-instruct-v1:0")
     elif model_name == 'claude_3_sonnet':
         return BedrockChat(model_id="anthropic.claude-3-sonnet-20240229-v1:0")
     elif model_name == 'claude_3_haiku':
         return BedrockChat(model_id="anthropic.claude-3-haiku-20240307-v1:0")
-    elif model_name == 'claude_3_opus':
-        return BedrockChat(model_id="anthropic.claude-3-opus-20240229-v1:0")
-    elif model_name == 'claude_v2.1_200k':
+    elif model_name == 'claude_v2':
         return BedrockChat(model_id="anthropic.claude-v2")
+    elif model_name == 'claude_v2.1_200k':
+        return BedrockChat(model_id="anthropic.claude-v2:1:200k") #
     elif model_name == 'amazon_titan_text_g1':
         return BedrockLLM(model_id="amazon.titan-text-express-v1")
+    elif model_name == 'mixtral_8x7b_instruct':
+        return BedrockLLM(model_id="mistral.mixtral-8x7b-instruct-v0:1")
+    elif model_name == 'mistral_7b_instruct':
+        return BedrockLLM(model_id="mistral.mistral-7b-instruct-v0:2")
+    elif model_name == 'granite_13b_chat':
+        return WatsonxLLM(model_id="ibm/granite-13b-chat-v2", project_id=os.environ["WATSONX_PROJECT_ID"], params=parameters)
+    elif model_name == 'granite_13b_instruct':
+        return WatsonxLLM(model_id="ibm/granite-13b-instruct-v2", project_id=os.environ["WATSONX_PROJECT_ID"], params=parameters)
     else:
-        return OpenAI(temperature=temperature, max_tokens=1024)  # default model
+        return OpenAI(temperature=temperature, max_tokens=max_new_tokens)  # default model
 
 
 @app.route('/')
@@ -48,12 +69,21 @@ def index():
 
 @app.route('/evaluate', methods=['POST'])
 def evaluate():
-    model = request.form['model']
-    temperature = float(request.form['temperature'])
-    prompt = request.form['prompt']
-    criteria = request.form['criteria']
-    iterations = int(request.form['iterations'])
-    expected_result = request.form['expected_result']
+    required_fields = ['model', 'temperature', 'max_new_tokens', 'prompt', 'criteria', 'iterations', 'expected_result']
+    for field in required_fields:
+        if field not in request.form:
+            return jsonify({'error': f'Missing required field: {field}'}), 400
+
+    try:
+        model = request.form['model']
+        temperature = float(request.form['temperature'])
+        max_new_tokens = float(request.form['max_new_tokens'])
+        prompt = request.form['prompt']
+        criteria = request.form['criteria']
+        iterations = int(request.form['iterations'])
+        expected_result = request.form['expected_result']
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
 
     accuracy_criteria = {
         "accuracy": criteria
@@ -64,7 +94,7 @@ def evaluate():
         criteria=accuracy_criteria,
     )
 
-    llm = get_llm(model, temperature)
+    llm = get_llm(model, temperature, max_new_tokens)
     eval_results = []
 
     for i in range(iterations):
