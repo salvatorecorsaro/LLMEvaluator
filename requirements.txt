@@ -6,3 +6,4 @@ langchain_openai
 flask
 boto3
 langchain-aws
+langchain-ibm
