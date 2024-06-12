@@ -23,20 +23,26 @@ def get_llm(model_name, temperature):
         return ChatOpenAI(model_name="gpt-4-turbo", temperature=temperature, max_tokens=1024)
     elif model_name == 'gpt_4o':
         return ChatOpenAI(model_name="gpt-4o", temperature=temperature, max_tokens=1024)
-    elif model_name == 'llama_3_8b':
+    elif model_name == 'llama_2_13b':
         return BedrockLLM(model_id="meta.llama2-13b-chat-v1")
+    elif model_name == 'llama_3_8b':
+        return BedrockLLM(model_id="meta.llama3-8b-instruct-v1:0")
     elif model_name == 'llama_3_70b':
-        return BedrockChat(model_id="meta.llama3-70b-instruct-v1")
+        return BedrockChat(model_id="meta.llama3-70b-instruct-v1:0")
     elif model_name == 'claude_3_sonnet':
         return BedrockChat(model_id="anthropic.claude-3-sonnet-20240229-v1:0")
     elif model_name == 'claude_3_haiku':
         return BedrockChat(model_id="anthropic.claude-3-haiku-20240307-v1:0")
-    elif model_name == 'claude_3_opus':
-        return BedrockChat(model_id="anthropic.claude-3-opus-20240229-v1:0")
-    elif model_name == 'claude_v2.1_200k':
+    elif model_name == 'claude_v2':
         return BedrockChat(model_id="anthropic.claude-v2")
+    elif model_name == 'claude_v2.1_200k':
+        return BedrockChat(model_id="anthropic.claude-v2:1:200k") #
     elif model_name == 'amazon_titan_text_g1':
         return BedrockLLM(model_id="amazon.titan-text-express-v1")
+    elif model_name == 'mixtral_8x7b_instruct':
+        return BedrockLLM(model_id="mistral.mixtral-8x7b-instruct-v0:1")
+    elif model_name == 'mistral_7b_instruct':
+        return BedrockLLM(model_id="mistral.mistral-7b-instruct-v0:2")
     else:
         return OpenAI(temperature=temperature, max_tokens=1024)  # default model
 
