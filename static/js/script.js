@@ -65,7 +65,12 @@ document.getElementById('export-csv').addEventListener('click', function() {
 
     const csvContent = rows.map(row => {
         const cells = Array.from(row.querySelectorAll('th,td'));
-        return cells.map(cell => cell.textContent).join(',');
+        return cells.map(cell => {
+            let cellValue = cell.textContent.trim();
+            cellValue = cellValue.replace(/"/g, '""');
+            cellValue = `"${cellValue}"`;
+            return cellValue;
+        }).join(',');
     }).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
