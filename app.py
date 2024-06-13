@@ -3,7 +3,6 @@ from langchain.evaluation import load_evaluator
 from langchain_openai import ChatOpenAI, OpenAI
 
 from langchain_aws import BedrockLLM, BedrockChat
-
 from langchain_ibm import WatsonxLLM
 
 from langchain.schema import HumanMessage
@@ -19,6 +18,7 @@ dotenv.load_dotenv()
 app = Flask(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
+
 
 def get_llm(model_name, temperature, max_new_tokens):
     parameters = {
@@ -59,7 +59,8 @@ def get_llm(model_name, temperature, max_new_tokens):
     elif model_name == 'mistral_7b_instruct':
         return BedrockLLM(model_id="mistral.mistral-7b-instruct-v0:2")
     elif model_name == 'granite_13b_chat':
-        return WatsonxLLM(model_id="ibm/granite-13b-chat-v2", project_id=os.environ["WATSONX_PROJECT_ID"], params=parameters)
+        return WatsonxLLM(model_id="ibm/granite-13b-chat-v2", project_id=os.environ["WATSONX_PROJECT_ID"],
+                          params=parameters)
     elif model_name == 'granite_13b_instruct':
         return WatsonxLLM(model_id="ibm/granite-13b-instruct-v2", project_id=os.environ["WATSONX_PROJECT_ID"], params=parameters)
     elif model_name == 'granite_20b_multilingual':
@@ -76,6 +77,7 @@ def index():
 @app.route('/evaluate', methods=['POST'])
 def evaluate():
     required_fields = ['model', 'temperature', 'max_new_tokens', 'prompt', 'criteria', 'iterations', 'expected_result']
+
     for field in required_fields:
         if field not in request.form:
             return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -88,6 +90,8 @@ def evaluate():
         criteria = request.form['criteria']
         iterations = int(request.form['iterations'])
         expected_result = request.form['expected_result']
+
+
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
 
@@ -125,7 +129,8 @@ def evaluate():
             logging.debug(f"Received prediction: {prediction}")
 
             eval_result = evaluator.evaluate_strings(prediction=prediction, input=prompt,
-                                                     reference=expected_result)
+                                                     reference=expected_result
+                                                     )
             score_match = re.search(r'\[\[(\d+)]]', eval_result['reasoning'])
             score = int(score_match.group(1)) if score_match else None
             eval_results.append({
