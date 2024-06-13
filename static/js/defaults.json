@@ -1,0 +1,9 @@
+{
+    "model": "granite_13b_chat",
+    "temperature": 0.5,
+    "max_new_tokens": 700,
+    "prompt": "Write the recipe and ingredients to cook a Spanish tortilla de patatas.",
+    "criteria": "Score 10: It describe all the recipes and steps and also the full list of ingredients with the same quantity of them.\nScore 7: It describe all the recipes and steps and also the full list of ingredients but with a different quantity of them or minor differences.\nScore 5: It describe the recipe and some ingredients.\nScore 3: It gives a description of how to cook.\nScore 1: Non sense answer, and no related to the prompt.",
+    "expected_result": "Ingredients:\n- 4 large potatoes\n- 6 eggs\n- 1 onion (optional)\n- salt (at taste)\n- olive oil\n\nRecipe:\n1. Peel and thinly slice the potatoes and onion.\n2. Heat olive oil in a large frying pan over medium heat.\n3. Add the potatoes and onion to the pan and cook, stirring occasionally, until they are soft and golden (about 20 minutes).\n4. Drain the potatoes and onion to remove excess oil.\n5. In a bowl, beat the eggs and add a pinch of salt.\n6. Mix the potatoes and onion with the beaten eggs.\n7. Heat a little olive oil in a clean frying pan over medium heat.\n8. Pour the egg mixture into the pan and cook for about 5 minutes until the bottom is set.\n9. Place a plate over the pan and flip the tortilla onto the plate.\n10. Slide the tortilla back into the pan to cook the other side for another 5 minutes.",
+    "iterations": 1
+}

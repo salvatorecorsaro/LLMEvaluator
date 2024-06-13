@@ -10,57 +10,81 @@
     <img src="{{ url_for('static', filename='images/llmlogo_back.png') }}" alt="LLM Evaluator Logo" class="logo">
 </header>
 
-<form id="evaluation-form">
-    <label for="model">Select the model to test:</label>
-    <select id="model" name="model">
-        <option value="gpt_3.5">GPT-3.5</option>
-        <option value="gpt_4">GPT-4</option>
-        <option value="gpt_4o">GPT-4o</option>
-        <option value="llama_2_13b">Llama 2 13b</option>
-        <option value="llama_3_8b">Llama 3 8b</option>
-        <option value="llama_3_70b">Llama 3 70b</option>
-        <option value="claude_3_sonnet">Claude 3 Sonnet</option>
-        <option value="claude_3_haiku">Claude 3 Haiku</option>
-        <option value="claude_v2">Claude v2</option>
-        <option value="claude_v2.1_200k">Claude v2.1 200K</option>
-        <option value="amazon_titan_text_g1">Amazon Titan Text G1</option>
-        <option value="mixtral_8x7b_instruct">Mixtral 8x7b Instruct</option>
-        <option value="mistral_7b_instruct">Mistral 7b Instruct</option>
-        <option value="granite_13b_chat">Granite 13b Chat</option>
-        <option value="granite_13b_instruct">Granite 13b Instruct</option>
-    </select>
+<div class="container">
+    <div class="tabs">
+        <div class="tab active" data-tab="tab-form">Form</div>
+        <div class="tab" data-tab="tab-csv">Upload CSV</div>
+    </div>
 
-    <label for="temperature">Temperature:</label>
-    <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="1" value="0.5">
+    <div id="tab-form" class="tab-content active">
+        <h2>Evaluate LLM</h2>
+        <form id="evaluation-form">
+            <label for="model">Select the model to test:</label>
+            <select id="model" name="model">
+                <option value="gpt_3.5">GPT-3.5</option>
+                <option value="gpt_4">GPT-4</option>
+                <option value="gpt_4o">GPT-4o</option>
+                <option value="llama_2_13b">Llama 2 13b</option>
+                <option value="llama_3_8b">Llama 3 8b</option>
+                <option value="llama_3_70b">Llama 3 70b</option>
+                <option value="codellama_34b_instruct">CodeLlama 34b Instruct</option>
+                <option value="claude_3_sonnet">Claude 3 Sonnet</option>
+                <option value="claude_3_haiku">Claude 3 Haiku</option>
+                <option value="claude_v2">Claude v2</option>
+                <option value="claude_v2.1_200k">Claude v2.1 200K</option>
+                <option value="amazon_titan_text_g1">Amazon Titan Text G1</option>
+                <option value="mixtral_8x7b_instruct">Mixtral 8x7b Instruct</option>
+                <option value="mistral_7b_instruct">Mistral 7b Instruct</option>
+                <option value="granite_13b_chat">Granite 13b Chat</option>
+                <option value="granite_13b_instruct">Granite 13b Instruct</option>
+                <option value="granite_20b_multilingual">Granite 20b Multilingual</option>
+            </select>
 
-    <label for="max_new_tokens">Max new tokens:</label>
-    <input type="number" id="max_new_tokens" name="max_new_tokens" step="1" min="0" max="1024" value="700">
+            <div class="row">
+                <div>
+                    <label for="temperature">Temperature:</label>
+                    <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="1" value="0.5">
+                </div>
+                <div>
+                    <label for="max_new_tokens">Max new tokens:</label>
+                    <input type="number" id="max_new_tokens" name="max_new_tokens" step="1" min="0" max="1024" value="700">
+                </div>
+            </div>
 
-    <label for="prompt">The prompt to use:</label>
-    <textarea id="prompt" name="prompt" rows="4"></textarea>
+            <label for="prompt">The prompt to use:</label>
+            <textarea id="prompt" name="prompt" rows="4">
+            </textarea>
 
-    <label for="criteria">The score rules:</label>
-    <textarea id="criteria" name="criteria" rows="6"></textarea>
+            <label for="criteria">The score rules:</label>
+            <textarea id="criteria" name="criteria" rows="6">
+            </textarea>
 
-    <label for="expected_result">A good expected result (optional):</label>
-    <textarea id="expected_result" name="expected_result" rows="6"></textarea>
+            <label for="expected_result">A good expected result:</label>
+            <textarea id="expected_result" name="expected_result" rows="6">
+            </textarea>
 
-    <label for="iterations">Number of iterations (from 1 to 10):</label>
-    <input type="number" id="iterations" name="iterations" min="1" max="10" value="1">
+            <label for="iterations">Number of iterations (from 1 to 10):</label>
+            <input type="number" id="iterations" name="iterations" min="1" max="10" value="1">
+            <button type="button" id="clear-fields">Clear Fields</button>
+            <button type="submit">Submit</button>
+        </form>
 
-    <button type="submit">Submit</button>
-</form>
-<div id="results">
-    <h2>Evaluation Results</h2>
-    <div id="result-table"></div>
+        <div class="container" id="results">
+            <h2>Evaluation Results</h2>
+            <div id="result-table"></div>
+            <button id="export-csv" class="hidden">Export as CSV</button>
+        </div>
+    </div>
+
+    <div id="tab-csv" class="tab-content">
+        <h2>Upload CSV to Run Evaluation</h2>
+        <form id="csv-upload-form" method="post" enctype="multipart/form-data" action="/upload_csv">
+            <input type="file" name="file" accept=".csv">
+            <button type="submit">Upload and Run Evaluation</button>
+            <div class="spinner" id="spinner-csv"></div>
+        </form>
+    </div>
 </div>
-<button id="export-csv">Export as CSV</button>
-
-<h2>Upload CSV to Run Experiments</h2>
-<form id="csv-upload-form" method="post" enctype="multipart/form-data" action="/upload_csv">
-    <input type="file" name="file" accept=".csv">
-    <button type="submit">Upload and Run Experiments</button>
-</form>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
