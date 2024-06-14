@@ -101,3 +101,103 @@ th {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+#spinner-csv {
+    display: none;
+    margin: auto;
+}
+
+.tabs {
+    display: flex;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-radius: 4px 4px 0 0;
+}
+
+.tab.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+#results, #csv-upload {
+    margin-top: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    margin: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+label, select, input, textarea, button {
+    margin-bottom: 15px;
+}
+
+input, select, textarea {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    width: 100%;
+}
+
+input {
+  padding: 10px 10px 10px 10px;
+  width: auto;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#clear-fields {
+    background-color: grey;
+}
+#clear-fields:hover {
+    background-color: darkgrey;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.row > div {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.row > div:last-child {
+    margin-right: 0;
+}

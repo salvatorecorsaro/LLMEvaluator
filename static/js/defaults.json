@@ -1,0 +1,9 @@
+{
+    "model": "granite_13b_chat",
+    "temperature": 0.5,
+    "max_new_tokens": 700,
+    "prompt": "Explain the process of photosynthesis in plants.",
+    "criteria": "Score 1: The answer does not mention photosynthesis or plants.\nScore 3: The answer mentions photosynthesis or plants but does not explain the process.\nScore 5: The answer provides a partial explanation of photosynthesis but lacks key details.\nScore 7: The answer explains photosynthesis adequately but may have minor inaccuracies.\nScore 10: The answer provides a comprehensive and accurate explanation of photosynthesis in plants.",
+    "expected_result": "Photosynthesis is the process by which plants convert sunlight, water, and carbon dioxide into glucose and oxygen. It occurs in the chloroplasts of plant cells, where chlorophyll absorbs sunlight energy. The light energy is used to convert water and carbon dioxide into glucose through a series of chemical reactions. The glucose is then used by the plant for growth and energy, while the oxygen is released into the atmosphere.",
+    "iterations": 1
+}
