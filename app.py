@@ -311,7 +311,6 @@ def evaluate_stream():
 
         evaluator = load_evaluator(
             "labeled_score_string",
-            # https://api.python.langchain.com/en/latest/evaluation/langchain.evaluation.schema.EvaluatorType.html "The labeled scored string evaluator, which gives a score between 1 and 10 to a prediction based on a ground truth reference label."
             llm=llm_evaluator,
             criteria=accuracy_criteria
         )
@@ -342,23 +341,24 @@ def evaluate_stream():
                                                          reference=expected_result)
                 score_match = re.search(r'\[\[(\d+)]]', eval_result['reasoning'])
                 score = int(score_match.group(1)) if score_match else None
-                eval_results.append({
+                result = {
                     'iteration': i + 1,
                     'prediction': prediction,
                     'score': score,
                     'reason': eval_result['reasoning']
-                })
+                }
+                eval_results.append(result)
             except ValueError as e:
                 logging.error(f"Error during evaluation: {e}")
-                eval_results.append({
+                result = {
                     'iteration': i + 1,
                     'prediction': None,
                     'score': None,
                     'reason': str(e)
-                })
+                }
+                eval_results.append(result)
 
-            yield f"data: {i+1} of {iterations}\n\n".encode()
-            #time.sleep(1)  # Simulación de retraso para ilustrar el progreso
+            yield f"data: {json.dumps(result)}\n\n".encode()
 
         scores = [result["score"] for result in eval_results if result["score"] is not None]
         avg_score = sum(scores) / len(scores) if scores else None
@@ -387,6 +387,7 @@ def evaluate_stream():
         yield f"data: {json.dumps({'eval_results': eval_results, 'avg_score': avg_score, 'final_verdict': final_verdict, 'temperature': temperature})}\n\n".encode()
 
     return Response(generate(), content_type='text/event-stream')
+
 
 
 if __name__ == '__main__':
