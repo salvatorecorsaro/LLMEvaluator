@@ -36,14 +36,26 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 document.getElementById('evaluation-form').addEventListener('submit', function(e) {
     e.preventDefault();
-
     document.getElementById('export-csv').classList.add('hidden');
-
     const formData = new FormData(this);
-
-    // Show a loading indicator
     const resultTableDiv = document.getElementById('result-table');
-    resultTableDiv.innerHTML = '<p><span class="spinner"></span> Processing inputs...</p>';
+    resultTableDiv.innerHTML = `
+        <p id="loading-indicator"><span class="spinner"></span> Processing iteration 1 of ${formData.get('iterations')}...</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Temperature</th>
+                    <th>Iteration</th>
+                    <th>Prediction</th>
+                    <th>Score</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody id="result-table-body">
+            </tbody>
+        </table>
+    `;
 
     fetch('/evaluate_stream', {
         method: 'POST',
@@ -53,47 +65,24 @@ document.getElementById('evaluation-form').addEventListener('submit', function(e
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let result = '';
+        let processedIterations = new Set(); // Track processed iterations
+        const totalIterations = parseInt(formData.get('iterations'), 10); // Total iterations
 
         reader.read().then(function processText({ done, value }) {
             if (done) {
+                // Remove the loading indicator
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+
                 try {
                     const data = JSON.parse(result.split("\n").filter(line => line.trim().startsWith("data:")).pop().substring(5));
-                    let tableHTML = `
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Temperature</th>
-                                    <th>Iteration</th>
-                                    <th>Prediction</th>
-                                    <th>Score</th>
-                                    <th>Reason</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    data.eval_results.forEach(result => {
-                        tableHTML += `
-                            <tr>
-                                <td>${new Date().toLocaleDateString()}</td>
-                                <td>${data.temperature}</td>
-                                <td>${result.iteration}</td>
-                                <td>${result.prediction}</td>
-                                <td>${result.score}</td>
-                                <td>${result.reason}</td>
-                            </tr>
-                        `;
-                    });
-
-                    tableHTML += `
-                            </tbody>
-                        </table>
+                    let finalResults = `
                         <p>Average Score: ${data.avg_score}</p>
                         <p>Final Verdict: ${data.final_verdict}</p>
                     `;
-
-                    resultTableDiv.innerHTML = tableHTML;
+                    resultTableDiv.insertAdjacentHTML('beforeend', finalResults);
                     document.getElementById('export-csv').classList.remove('hidden');
                 } catch (e) {
                     console.error('Error parsing final response:', e);
@@ -103,8 +92,44 @@ document.getElementById('evaluation-form').addEventListener('submit', function(e
             }
 
             result += decoder.decode(value, { stream: true });
-            let progress = result.split("\n").filter(line => line.trim().startsWith("data:")).pop().substring(5);
-            resultTableDiv.innerHTML = `<p><span class="spinner"></span> ${progress} iterations completed</p>`;
+
+            // Split the streamed results and update the table with new rows
+            const newResults = result.split("\n").filter(line => line.trim().startsWith("data:"));
+            let tableRows = '';
+
+            newResults.forEach(line => {
+                try {
+                    const data = JSON.parse(line.substring(5));
+                    if (data.iteration && !processedIterations.has(data.iteration)) {
+                        processedIterations.add(data.iteration); // Mark this iteration as processed
+                        tableRows += `
+                            <tr>
+                                <td>${new Date().toLocaleDateString()}</td>
+                                <td>${formData.get('temperature')}</td>
+                                <td>${data.iteration}</td>
+                                <td>${data.prediction}</td>
+                                <td>${data.score}</td>
+                                <td>${data.reason}</td>
+                            </tr>
+                        `;
+                        const loadingIndicator = document.getElementById('loading-indicator');
+                        if (loadingIndicator) {
+                            if (data.iteration < totalIterations) {
+                                loadingIndicator.innerHTML = `<span class="spinner"></span> Processing iteration ${data.iteration + 1} of ${totalIterations}...`;
+                            } else {
+                                loadingIndicator.innerHTML = `<span class="spinner"></span> Processing iteration ${data.iteration} of ${totalIterations}... Now processing the final evaluation...`;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing streamed data:', e);
+                }
+            });
+
+            if (tableRows) {
+                document.getElementById('result-table-body').insertAdjacentHTML('beforeend', tableRows);
+            }
+
             reader.read().then(processText);
         });
     })
@@ -113,6 +138,11 @@ document.getElementById('evaluation-form').addEventListener('submit', function(e
         resultTableDiv.innerHTML = '<p>Error occurred. Please try again.</p>';
     });
 });
+
+
+
+
+
 
 document.getElementById('csv-upload-form').onsubmit = function(event) {
     event.preventDefault();
